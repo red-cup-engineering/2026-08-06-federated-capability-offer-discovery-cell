@@ -45,6 +45,7 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
+          "kind",
           "offer",
           "cell",
           "sku",
@@ -130,6 +131,9 @@
               "unassayed",
               "not-declared"
             ]
+          },
+          "kind": {
+            "const": "org.emsenn.capability-offer.v3"
           }
         }
       }
