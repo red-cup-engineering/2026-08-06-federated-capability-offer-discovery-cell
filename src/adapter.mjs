@@ -1,14 +1,15 @@
 import {resolve} from "node:path";
-import {listAddressedRmnOutbox} from "@red-cup-engineering/activitypub-services-section/rmn-outbox-client";
-import {semanticId} from "@red-cup-engineering/relation-model-notation-runtime";
-import {encodeRelationalValue} from "@red-cup-engineering/relation-model-notation-runtime/relational-value";
+import {listAddressedSenOutbox} from "@red-cup-engineering/activitypub-services-section/sen-outbox-client";
+import {identifyJsonSemanticContent, EMPTY_WITNESS_ROOT} from "@red-cup-engineering/computer-data-engineering-services-section/semiotic-expression-notation/semantic-content-identity";
 import {createSettlementStore} from "@red-cup-engineering/witness-journal-rdf-projection-service/client";
 
-function identifyRelationalValue(value) {
-  const encoded = encodeRelationalValue(value);
-  return {
-    id: semanticId(["ascribe", encoded.type, encoded.term]),
-  };
+function identifyDiscoveryRequest(value) {
+  if (value?.kind !== "org.emsenn.capability-offer-discovery.request.v1") {
+    throw new TypeError("only one identified federated discovery request can be admitted");
+  }
+  return { id: identifyJsonSemanticContent({
+    objectKind: value.kind, value, witnessRoot: EMPTY_WITNESS_ROOT,
+  }).ni };
 }
 
 export function createCapabilityOfferDiscoveryRuntime({root}) {
@@ -19,8 +20,8 @@ export function createCapabilityOfferDiscoveryRuntime({root}) {
   });
   return Object.freeze({
     providers: Object.freeze({
-      identify: async (value) => identifyRelationalValue(value),
-      observe: (input) => listAddressedRmnOutbox(input),
+      identify: async (value) => identifyDiscoveryRequest(value),
+      observe: (input) => listAddressedSenOutbox(input),
       record: (input) => store.record(input),
     }),
   });
