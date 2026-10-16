@@ -130,6 +130,13 @@
           },
           "kind": {
             "const": "org.emsenn.capability-offer.v3"
+          },
+          "sourceRightsClaim": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Original publisher-authored rights claim; unassayed at discovery, not a license grant"
           }
         }
       }
