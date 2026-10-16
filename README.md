@@ -88,3 +88,16 @@ candidate list; the existing discovery record retains the exact refused
 outbox. The local 131-offer SEN producer → paginated reader → discovery
 consumer regression represents the complete useful traversal. This is no
 new registry, no funding authority and no ACK for an external buyer.
+
+### Discover an unfamiliar market without knowing operation names
+
+A contracted discovery request may name `operation: "*"` to discover **all**
+public or caller-addressed SEN Offers within the explicitly supplied outbox
+denominator. The normal, exact operation filter remains the default when an
+actual buyer already knows its requested operation. Wildcard discovery still
+uses the same finite ActivityPub source budget, atomic per-peer admission and
+current unexpired typed Offer checks; it does not invent capacity, terms,
+customer ACK, or a purchase. The current producer/consumer regression covers
+41 different operations over multiple ActivityPub pages, as well as a single
+exact-operation selection. Batches of market surveys remain the source-owning
+consumer's decision, not a central compulsory catalog.

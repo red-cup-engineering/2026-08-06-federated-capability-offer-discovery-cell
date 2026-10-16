@@ -237,3 +237,49 @@ test("invalid late semantic claim cannot turn a refused seller into partially ad
   assert.deepEqual(records[0].record.candidates, []);
   assert.equal(records[0].record.receipt, undefined);
 });
+
+test("bounded all-operations discovery makes an unfamiliar seller's real SEN vocabulary discoverable", async () => {
+  const observedOffers = Array.from({ length: 41 }, (_, index) =>
+    signedOffer(offer({
+      sku: ni("independent-discoverable-sku-" + index),
+      operation: "unfamiliar-operation-" + index,
+    })));
+  const pages = [];
+  for (let index = 0; index < observedOffers.length; index += 12) {
+    const number = pages.length + 1;
+    pages.push({
+      id: OUTBOX + "?page=" + number, type: "OrderedCollectionPage",
+      partOf: OUTBOX, orderedItems: observedOffers.slice(index, index + 12),
+      ...(index + 12 < observedOffers.length ? { next: OUTBOX + "?page=" + (number + 1) } : {}),
+    });
+  }
+  const responses = new Map([[OUTBOX, {
+    id: OUTBOX, type: "OrderedCollection", totalItems: observedOffers.length, first: pages[0].id,
+  }], ...pages.map(page => [page.id, page])]);
+  const fetcher = async url => {
+    const value = responses.get(url);
+    return value ? Response.json(value) : new Response(null, {status: 404});
+  };
+  const records = [];
+  const observer = {
+    observe: input => listAddressedSenOutbox({ ...input, fetcher }),
+    record: async entry => { records.push(entry); return { settlement: "research-only" }; },
+  };
+  const whole = await discoverFederatedCapabilityOffers(request({
+    operation: "*", maximumCandidates: 8,
+  }), observer, { now: BASE });
+  assert.equal(whole.candidates.length, 41,
+    "a wildcard operation is a full bounded market survey, not a silently truncated eight-offer hint");
+  assert.deepEqual(new Set(whole.candidates.map(value => value.operation)),
+    new Set(Array.from({ length: 41 }, (_, i) => "unfamiliar-operation-" + i)));
+  assert.deepEqual(whole.refusals, []);
+  assert.equal(whole.receipt.settlement, "research-only");
+  assert.equal(records[0].record.receipt, undefined);
+  assert.ok(whole.candidates.every(value => value.book?.account === "Income:TerritoryA" &&
+    value.sourceRightsVerification === "unassayed" && value.price.amount === "70000"));
+  const particular = await discoverFederatedCapabilityOffers(request({
+    operation: "unfamiliar-operation-9",
+  }), observer, { now: BASE });
+  assert.equal(particular.candidates.length, 1);
+  assert.equal(particular.candidates[0].operation, "unfamiliar-operation-9");
+});
