@@ -1,6 +1,5 @@
-import { materializeRmnActivity, ACTIVITYSTREAMS_PUBLIC } from "@red-cup-engineering/activitypub-services-section/rmn-activity";
-import { semanticBytes } from "@red-cup-engineering/relation-model-notation-runtime";
-import { encodeRelationalValue } from "@red-cup-engineering/relation-model-notation-runtime/relational-value";
+import { materializeSenActivity, senActivityObjectBytes } from "@red-cup-engineering/activitypub-services-section/sen-activity";
+import { ACTIVITYSTREAMS_PUBLIC } from "@red-cup-engineering/activitypub-services-section/activitystreams";
 
 const CAIP2 = /^eip155:[1-9][0-9]*$/u;
 const RESIDUAL_KIND = "org.emsenn.capability-offer.coordinate-residual.v1";
@@ -28,8 +27,8 @@ export function createDiscoveryOffer({ network, agentCard = process.env.A2A_AGEN
     packageOperation: coordinate("packageOperation", coordinates.packageOperation ?? {
       href: "https://www.npmjs.com/package/@red-cup-engineering/federated-capability-offer-discovery-cell",
       operation: "discover-federated-capability-offers",
-      consumes: ["application/rmn+cbor"],
-      emits: ["application/rmn+cbor"],
+      consumes: ["application/sen+cbor"],
+      emits: ["application/sen+cbor"],
       invocation: agentCard,
     }, "no owner-authored package operation reference was supplied"),
     deploymentHealth: coordinate("deploymentHealth", coordinates.deploymentHealth, "no live deployment or health reference was supplied"),
@@ -40,20 +39,16 @@ export function createDiscoveryOffer({ network, agentCard = process.env.A2A_AGEN
   });
 }
 
-function offerBytes(offer) {
-  const encoded = encodeRelationalValue(offer);
-  return semanticBytes(["ascribe", encoded.type, encoded.term]);
-}
-
-export function createDiscoveryOfferOutbox({ origin, identifier, network }) {
-  const offer = createDiscoveryOffer({ network });
-  const activity = materializeRmnActivity({
-    type: "Offer",
-    origin,
-    identifier,
-    recipient: ACTIVITYSTREAMS_PUBLIC,
-    objectBytes: offerBytes(offer),
-    agentCard: offer.agentCard
+/** One non-chargeable discovery capability, projected through the same
+ * canonical SEN/CloudEvents/A2A ActivityPub++ producer as paid sellers.
+ * An activity in this outbox is an offer, not a payment or service receipt. */
+export function createDiscoveryOfferOutbox({ origin, identifier, network, eventTime }) {
+  const agentCard = new URL("/.well-known/agent-card.json", origin).href;
+  const offer = createDiscoveryOffer({ network, agentCard });
+  const activity = materializeSenActivity({
+    type: "Offer", origin, identifier, recipient: ACTIVITYSTREAMS_PUBLIC,
+    objectBytes: senActivityObjectBytes({ objectKind: offer.kind, value: offer }),
+    agentCard: offer.agentCard, eventTime,
   });
   return async ({ cursor }) => {
     if (cursor !== undefined && cursor !== null) return { items: [] };
