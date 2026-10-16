@@ -1,59 +1,58 @@
 #!/usr/bin/env node
 import { randomBytes } from "node:crypto";
-import { serveActivityPubProvider } from "@red-cup-engineering/activitypub-services-section/server";
-import { deliverActivity } from "@red-cup-engineering/activitypub-services-section";
-import { extractRmnActivity, projectRmnActivity } from "@red-cup-engineering/activitypub-services-section/rmn-activity";
-import { decodeSemantic, semanticBytes } from "@red-cup-engineering/relation-model-notation-runtime";
-import { decodeRelationalValue, encodeRelationalValue, RELATIONAL_VALUE_TYPE } from "@red-cup-engineering/relation-model-notation-runtime/relational-value";
+import { serveActivityPubProvider } from "@red-cup-engineering/activitypub-server";
+import { deliverActivity } from "@red-cup-engineering/activitypub-services-section/deliver";
 import { createDiscoveryOfferOutbox } from "../src/activitypub-offer.mjs";
 import { createActivityPubR2Custody } from "../src/activitypub-r2-custody.mjs";
-import { discoverFederatedCapabilityOffers } from "../lib/discovery.mjs";
+import { receiveDiscoveryActivity } from "../src/receive-discovery-activity.mjs";
 import { loadDiscoveryRuntime } from "../src/runtime.mjs";
 
+/** The existing Red Cup ActivityPub server owns signatures, delivery,
+ * network queue and actor transport. This business cell owns only the
+ * bounded discovery operation and its already-authored outbox. */
 const origin = process.env.ACTIVITYPUB_ORIGIN ?? "https://bare-cedar-fog.561.group";
 const identifier = process.env.ACTIVITYPUB_IDENTIFIER ?? "capability-offer-discovery";
 const network = process.env.SETTLEMENT_CAIP2;
-if (!network) throw new Error("SETTLEMENT_CAIP2 is required at the customer/deployment boundary");
+if (!network) throw new Error("SETTLEMENT_CAIP2 is required at the deployment boundary");
 const custody = createActivityPubR2Custody({ actor: identifier });
-const actor = `${origin}/actors/${identifier}`;
-const agentCard = process.env.A2A_AGENT_CARD_URL ?? `${origin}/actors/${identifier}`;
-let provider;
-
-async function receiveAgenticActivity(arrival) {
-  const activity = arrival?.jsonLd;
-  const sender = typeof activity?.actor === "string" ? activity.actor : null;
-  if (!sender || sender === actor) return;
-  const projection = extractRmnActivity(activity, { expectedActor: sender, expectedRecipient: actor });
-  const term = decodeSemantic(projection.objectBytes);
-  if (!Array.isArray(term) || term[0] !== "ascribe" || JSON.stringify(term[1]) !== JSON.stringify(RELATIONAL_VALUE_TYPE)) throw new TypeError("ActivityPub-carried A2A request is not a typed RMN operation");
-  const request = decodeRelationalValue(term[1], term[2]);
-  const runtime = await loadDiscoveryRuntime();
-  const result = await discoverFederatedCapabilityOffers(request, runtime.providers);
-  const encoded = encodeRelationalValue(result);
-  const response = projectRmnActivity({
-    type: "Accept", origin, identifier, recipient: sender,
-    objectBytes: semanticBytes(["ascribe", encoded.type, encoded.term]), agentCard,
+const agentCard = process.env.A2A_AGENT_CARD_URL ?? new URL("/.well-known/agent-card.json", origin).href;
+let installed;
+async function lookupInbox(sender) {
+  const url = new URL(sender);
+  if (url.protocol !== "https:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+    throw new TypeError("ActivityPub sender actor must be reached over HTTPS outside loopback");
+  }
+  const response = await fetch(url, {
+    redirect: "error", headers: { accept: "application/activity+json" },
+    signal: AbortSignal.timeout(8500),
   });
-  const senderDocument = await (await fetch(sender, { headers: { accept: "application/activity+json" } })).json();
-  const inbox = typeof senderDocument?.inbox === "string" ? senderDocument.inbox : senderDocument?.inbox?.id;
-  if (typeof inbox !== "string" || inbox === "") throw new Error("ActivityPub A2A sender actor exposes no inbox");
-  await deliverActivity(provider, { activity: response, recipient: sender, inbox });
+  if (!response.ok) throw new Error("sender actor discovery failed");
+  const document = await response.json();
+  if (document.id !== sender) throw new TypeError("sender discovery must return the same ActivityPub actor");
+  const inbox = typeof document.inbox === "string" ? document.inbox : document.inbox?.id;
+  if (typeof inbox !== "string" || !inbox) throw new TypeError("sender actor exposes no ActivityPub inbox");
+  const parsed = new URL(inbox);
+  if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+    throw new TypeError("sender inbox must use HTTPS outside loopback");
+  }
+  return parsed.href;
 }
-
-provider = await serveActivityPubProvider({
-  origin,
-  identifier,
+installed = await serveActivityPubProvider({
+  origin, identifier,
   actorName: "Federated Capability Offer Discovery Cell",
-  summary: "Publishes and executes bounded discovery of canonical RMN capability offers.",
+  summary: "Finds current public SEN capability Offers in explicitly named peer ActivityPub outboxes.",
   keyPath: process.env.ACTIVITYPUB_KEYS_PATH,
-  kv: custody.kv,
-  inbox: custody.inbox,
-  queue: custody.queue,
+  bearerToken: process.env.ACTIVITYPUB_INBOX_BEARER_TOKEN ?? randomBytes(32).toString("base64url"),
+  kv: custody.kv, inbox: custody.inbox, queue: custody.queue,
   hostname: process.env.HOST ?? "127.0.0.1",
   port: Number(process.env.PORT ?? "15614"),
-  bearerToken: randomBytes(32).toString("base64url"),
-  onActivity: receiveAgenticActivity,
-  listOutbox: createDiscoveryOfferOutbox({ origin, identifier, network })
+  onActivity: (arrival) => receiveDiscoveryActivity(arrival, {
+    origin, identifier, agentCard,
+    loadRuntime: loadDiscoveryRuntime,
+    lookupInbox,
+    deliver: (input) => deliverActivity(installed.provider, input),
+  }),
+  listOutbox: createDiscoveryOfferOutbox({ origin, identifier, network }),
 });
 process.stdout.write(`${origin}/actors/${identifier}\n`);
 process.on("uncaughtException", (error) => {
