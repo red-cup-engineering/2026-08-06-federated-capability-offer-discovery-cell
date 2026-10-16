@@ -118,3 +118,14 @@ The Agent Card version is projected from the actual package manifest; the
 new factory code must not contain an independent literal product version.
 A federated `Accept` is a transport response; it is still not the buyer's
 commercial ACK, a paid x402 receipt, or transfer of sovereign treasury.
+
+## Peer-address network admission
+
+The shared ActivityPub 0.8.6 outbox reader now calls the original Red Cup HTTP
+public-address policy **before every network fetch**, including each paginated
+peer source. This rejects localhost, private IP literals, special-use addresses
+and DNS resolving to a private or special-use address; same-origin page limits,
+no redirects and exact SEN admission are still required. Networkless fixtures
+supply an explicit replacement authorizer only in tests. A remote request
+cannot send a JavaScript policy function, relax the host's rule, or turn a
+refused peer into observed supply.

@@ -59,7 +59,7 @@ async function study(activity = signedOffer(), overrides = {}, extras = {}) {
   const records = [];
   const provider = {
     observe: input => listAddressedSenOutbox({
-      ...input, fetcher: async () => ({
+      ...input, authorizeUrl: async () => {}, fetcher: async () => ({
         ok: true, json: async () => ({
           type: "OrderedCollection", orderedItems: [activity],
         }),
@@ -185,7 +185,7 @@ test("paged sovereign seller feeds all 131 exact SEN offers without false ACK or
   };
   const records = [];
   const observer = {
-    observe: (input) => listAddressedSenOutbox({ ...input, fetcher: read }),
+    observe: (input) => listAddressedSenOutbox({ ...input, fetcher: read, authorizeUrl: async () => {} }),
     record: async entry => { records.push(entry); return { settlement: "study-only-no-purchase" }; },
   };
   const result = await discoverFederatedCapabilityOffers(request(), observer, { now: BASE });
@@ -203,7 +203,7 @@ test("paged sovereign seller feeds all 131 exact SEN offers without false ACK or
 
   const withheldRecords = [];
   const constrained = await discoverFederatedCapabilityOffers(request(), {
-    observe: (input) => listAddressedSenOutbox({ ...input, fetcher: read, maxPages: 2 }),
+    observe: (input) => listAddressedSenOutbox({ ...input, fetcher: read, authorizeUrl: async () => {}, maxPages: 2 }),
     record: async entry => { withheldRecords.push(entry); return { settlement: "study-only-no-purchase" }; },
   }, { now: BASE });
   assert.equal(constrained.candidates.length, 0,
@@ -222,7 +222,7 @@ test("invalid late semantic claim cannot turn a refused seller into partially ad
   }));
   const records = [];
   const observer = {
-    observe: input => listAddressedSenOutbox({ ...input, fetcher: async () => Response.json({
+    observe: input => listAddressedSenOutbox({ ...input, authorizeUrl: async () => {}, fetcher: async () => Response.json({
       type: "OrderedCollection", orderedItems: [good, bad],
     }) }),
     record: async entry => { records.push(entry); return { settlement: "not-a-commercial-receipt" }; },
@@ -262,7 +262,7 @@ test("bounded all-operations discovery makes an unfamiliar seller's real SEN voc
   };
   const records = [];
   const observer = {
-    observe: input => listAddressedSenOutbox({ ...input, fetcher }),
+    observe: input => listAddressedSenOutbox({ ...input, fetcher, authorizeUrl: async () => {} }),
     record: async entry => { records.push(entry); return { settlement: "research-only" }; },
   };
   const whole = await discoverFederatedCapabilityOffers(request({
