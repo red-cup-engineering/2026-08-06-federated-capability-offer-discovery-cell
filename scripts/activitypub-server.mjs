@@ -15,7 +15,23 @@ const identifier = process.env.ACTIVITYPUB_IDENTIFIER ?? "capability-offer-disco
 const network = process.env.SETTLEMENT_CAIP2;
 if (!network) throw new Error("SETTLEMENT_CAIP2 is required at the deployment boundary");
 const custody = createActivityPubR2Custody({ actor: identifier });
-const agentCard = process.env.A2A_AGENT_CARD_URL ?? new URL("/.well-known/agent-card.json", origin).href;
+const agentCard = new URL("/.well-known/agent-card.json", origin).href;
+const actor = new URL(`/actors/${identifier}`, origin).href;
+const advertisedCard = Object.freeze({
+  protocolVersion: "0.3.0",
+  name: "Federated Capability Offer Discovery",
+  description: "ActivityPub++ SEN discovery of independently attributed x402 seller offers from named peer outboxes.",
+  url: actor, preferredTransport: "ActivityPub++", version: "0.3.2",
+  capabilities: { streaming: false, pushNotifications: false, stateTransitionHistory: false },
+  defaultInputModes: ["application/sen+cbor"],
+  defaultOutputModes: ["application/sen+cbor"],
+  skills: [{
+    id: "discover-federated-capability-offers",
+    name: "Find capability offers",
+    description: "Read bounded peer ActivityPub outboxes and return source-qualified candidate offers without claiming payment or fulfillment.",
+    tags: ["federation", "x402", "capabilities"],
+  }],
+});
 let installed;
 async function lookupInbox(sender) {
   const url = new URL(sender);
@@ -44,6 +60,7 @@ installed = await serveActivityPubProvider({
   keyPath: process.env.ACTIVITYPUB_KEYS_PATH,
   bearerToken: process.env.ACTIVITYPUB_INBOX_BEARER_TOKEN ?? randomBytes(32).toString("base64url"),
   kv: custody.kv, inbox: custody.inbox, queue: custody.queue,
+  wellKnownResources: { "/.well-known/agent-card.json": advertisedCard },
   hostname: process.env.HOST ?? "127.0.0.1",
   port: Number(process.env.PORT ?? "15614"),
   onActivity: (arrival) => receiveDiscoveryActivity(arrival, {
