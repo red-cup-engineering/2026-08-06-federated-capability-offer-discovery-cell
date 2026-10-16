@@ -76,6 +76,8 @@ test("current x402 SEN ActivityPub++ seller turns into a bounded discoverable ca
   assert.equal(result.completeness, "supplied-denominator-only");
   assert.deepEqual(result.denominator, [OUTBOX]);
   assert.equal(result.candidates.length, 1);
+  assert.equal(result.candidates[0].kind, "org.emsenn.capability-offer.v3",
+    "the native current offer must feed the existing Coesite provider-market matcher");
   assert.match(result.candidates[0].offer, /^ni:\/\/\/sha-256;/u);
   assert.equal(result.candidates[0].publisher, ACTOR);
   assert.equal(result.candidates[0].provider, ACTOR);
