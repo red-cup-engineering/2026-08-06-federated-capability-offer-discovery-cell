@@ -24,12 +24,15 @@ function request(overrides = {}) {
 }
 function arrival(value = request()) {
   return {
-    jsonLd: projectSenActivity({
+    // A native SEN projector owns an immutable authored activity; Fedify's
+    // compact JSON-LD arrival is a separate decoded representation. Copy its
+    // outer record so the negative tests can tamper with claimed actor text.
+    jsonLd: { ...projectSenActivity({
       type: "Create", origin: "https://buyer.example", identifier: "buyer",
       recipient: ACTOR, agentCard: BUYER_CARD,
       objectBytes: senActivityObjectBytes({ objectKind: value.kind, value }),
       eventTime: MOMENT,
-    }),
+    }) },
     activity: { actorId: new URL(BUYER), actorIds: [new URL(BUYER)] },
     sender: { actorId: BUYER, inboxId: INBOX, sharedInboxId: null },
   };
