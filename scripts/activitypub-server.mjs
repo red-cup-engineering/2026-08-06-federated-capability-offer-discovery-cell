@@ -6,6 +6,7 @@ import { createDiscoveryOfferOutbox } from "../src/activitypub-offer.mjs";
 import { createActivityPubR2Custody } from "../src/activitypub-r2-custody.mjs";
 import { receiveDiscoveryActivity } from "../src/receive-discovery-activity.mjs";
 import { loadDiscoveryRuntime } from "../src/runtime.mjs";
+import packageMetadata from "../package.json" with { type: "json" };
 
 /** The existing Red Cup ActivityPub server owns signatures, delivery,
  * network queue and actor transport. This business cell owns only the
@@ -21,38 +22,18 @@ const advertisedCard = Object.freeze({
   protocolVersion: "0.3.0",
   name: "Federated Capability Offer Discovery",
   description: "ActivityPub++ SEN discovery of independently attributed x402 seller offers from named peer outboxes.",
-  url: actor, preferredTransport: "ActivityPub++", version: "0.3.2",
+  url: actor, preferredTransport: "ActivityPub++", version: packageMetadata.version,
   capabilities: { streaming: false, pushNotifications: false, stateTransitionHistory: false },
   defaultInputModes: ["application/sen+cbor"],
   defaultOutputModes: ["application/sen+cbor"],
   skills: [{
     id: "discover-federated-capability-offers",
     name: "Find capability offers",
-    description: "Read bounded peer ActivityPub outboxes and return source-qualified candidate offers without claiming payment or fulfillment.",
+    description: "Discover specified or all (*) operations from bounded peer ActivityPub++ SEN outboxes; source-qualified offers are not payment or fulfillment.",
     tags: ["federation", "x402", "capabilities"],
   }],
 });
 let installed;
-async function lookupInbox(sender) {
-  const url = new URL(sender);
-  if (url.protocol !== "https:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
-    throw new TypeError("ActivityPub sender actor must be reached over HTTPS outside loopback");
-  }
-  const response = await fetch(url, {
-    redirect: "error", headers: { accept: "application/activity+json" },
-    signal: AbortSignal.timeout(8500),
-  });
-  if (!response.ok) throw new Error("sender actor discovery failed");
-  const document = await response.json();
-  if (document.id !== sender) throw new TypeError("sender discovery must return the same ActivityPub actor");
-  const inbox = typeof document.inbox === "string" ? document.inbox : document.inbox?.id;
-  if (typeof inbox !== "string" || !inbox) throw new TypeError("sender actor exposes no ActivityPub inbox");
-  const parsed = new URL(inbox);
-  if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
-    throw new TypeError("sender inbox must use HTTPS outside loopback");
-  }
-  return parsed.href;
-}
 installed = await serveActivityPubProvider({
   origin, identifier,
   actorName: "Federated Capability Offer Discovery Cell",
@@ -66,7 +47,8 @@ installed = await serveActivityPubProvider({
   onActivity: (arrival) => receiveDiscoveryActivity(arrival, {
     origin, identifier, agentCard,
     loadRuntime: loadDiscoveryRuntime,
-    lookupInbox,
+    // The shared provider supplies the verified sender and its resolved inbox.
+    // The cell must not perform a second actor fetch or choose a new recipient.
     deliver: (input) => deliverActivity(installed.provider, input),
   }),
   listOutbox: createDiscoveryOfferOutbox({ origin, identifier, network }),

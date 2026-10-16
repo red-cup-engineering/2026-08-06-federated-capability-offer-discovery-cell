@@ -101,3 +101,20 @@ customer ACK, or a purchase. The current producer/consumer regression covers
 41 different operations over multiple ActivityPub pages, as well as a single
 exact-operation selection. Batches of market surveys remain the source-owning
 consumer's decision, not a central compulsory catalog.
+
+## ActivityPub provider identity and inbox custody
+
+The production `serve-federated-capability-offer-discovery-activitypub` inlet
+now consumes the *same provider-resolved sender and inbox* received from Red
+Cup's shared ActivityPub server. The claimed compact JSON-LD actor and the
+provider's resolved `arrival.activity.actorId` must equal
+`arrival.sender.actorId` before the discovery runtime or WitnessJournal can
+be opened. The seller's inbox is taken directly from that resolved sender;
+the old redundant actor-document network GET was removed. This cuts a
+remote round trip per accepted request and denies forged recipient and inbox
+substitution without inventing a second identity registry.
+
+The Agent Card version is projected from the actual package manifest; the
+new factory code must not contain an independent literal product version.
+A federated `Accept` is a transport response; it is still not the buyer's
+commercial ACK, a paid x402 receipt, or transfer of sovereign treasury.

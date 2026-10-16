@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/federated-capability-offer-discovery-cell",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Discovers canonical SEN/CloudEvents/A2A x402 capability offers from explicit peer ActivityPub++ outboxes, preserving sovereign seller and settlement boundaries.",
   "type": "module",
   "private": true,
