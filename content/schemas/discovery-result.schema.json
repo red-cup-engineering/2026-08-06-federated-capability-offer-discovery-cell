@@ -24,7 +24,7 @@
     },
     "request": {
       "type": "string",
-      "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+      "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$"
     },
     "operation": {
       "type": "string"
@@ -65,15 +65,15 @@
         "properties": {
           "offer": {
             "type": "string",
-            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$"
           },
           "cell": {
             "type": "string",
-            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$"
           },
           "sku": {
             "type": "string",
-            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$"
           },
           "activity": {
             "type": "string",
@@ -93,7 +93,7 @@
           },
           "law": {
             "type": "string",
-            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$"
           },
           "agentCard": {
             "type": "string",
