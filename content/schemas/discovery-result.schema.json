@@ -3,34 +3,134 @@
   "$id": "https://red-cup-engineering.github.io/federated-capability-offer-discovery-cell/schemas/discovery-result.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["kind", "provider", "request", "operation", "denominator", "completeness", "candidates", "refusals", "residuals", "receipt"],
+  "required": [
+    "kind",
+    "provider",
+    "request",
+    "operation",
+    "denominator",
+    "completeness",
+    "candidates",
+    "refusals",
+    "residuals",
+    "receipt"
+  ],
   "properties": {
-    "kind": {"const": "org.emsenn.capability-offer-discovery.result.v1"},
-    "provider": {"const": "urn:ame:federated-capability-offer-discovery-cell"},
-    "request": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
-    "operation": {"type": "string"},
-    "denominator": {"type": "array", "items": {"type": "string", "format": "uri"}},
-    "completeness": {"const": "supplied-denominator-only"},
+    "kind": {
+      "const": "org.emsenn.capability-offer-discovery.result.v1"
+    },
+    "provider": {
+      "const": "urn:ame:federated-capability-offer-discovery-cell"
+    },
+    "request": {
+      "type": "string",
+      "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+    },
+    "operation": {
+      "type": "string"
+    },
+    "denominator": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "completeness": {
+      "const": "supplied-denominator-only"
+    },
     "candidates": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["offer", "cell", "sku", "activity", "publisher", "provider", "operation", "law", "agentCard", "authorization", "price", "expiresAt"],
+        "required": [
+          "offer",
+          "cell",
+          "sku",
+          "activity",
+          "publisher",
+          "provider",
+          "operation",
+          "law",
+          "agentCard",
+          "authorization",
+          "price",
+          "expiresAt",
+          "seller",
+          "book",
+          "sourceRightsVerification"
+        ],
         "properties": {
-          "offer": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
-          "cell": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
-          "sku": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
-          "activity": {"type": "string", "format": "uri"},
-          "publisher": {"type": "string", "format": "uri"},
-          "provider": {"type": "string", "pattern": "^urn:ame:"},
-          "operation": {"type": "string", "minLength": 1},
-          "law": {"type": "string", "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"},
-          "agentCard": {"type": "string", "format": "uri"},
-          "authorization": {"type": "object"},
-          "price": {"type": "object"},
-          "expiresAt": {"type": "string", "format": "date-time"},
-          "coordinates": {"type": "object"}
+          "offer": {
+            "type": "string",
+            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+          },
+          "cell": {
+            "type": "string",
+            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+          },
+          "sku": {
+            "type": "string",
+            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+          },
+          "activity": {
+            "type": "string",
+            "format": "uri"
+          },
+          "publisher": {
+            "type": "string",
+            "format": "uri"
+          },
+          "provider": {
+            "type": "string",
+            "format": "uri"
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "law": {
+            "type": "string",
+            "pattern": "^ni:///sha-256;[A-Za-z0-9_-]{43}$"
+          },
+          "agentCard": {
+            "type": "string",
+            "format": "uri"
+          },
+          "authorization": {
+            "type": "object"
+          },
+          "price": {
+            "type": "object"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "coordinates": {
+            "type": "object"
+          },
+          "seller": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Publisher-authored micro-enterprise identity; not an independently qualified contracting party"
+          },
+          "book": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Source-supplied beneficiary and ledger attribution, not a booked settlement"
+          },
+          "sourceRightsVerification": {
+            "enum": [
+              "unassayed",
+              "not-declared"
+            ]
+          }
         }
       }
     },
@@ -39,14 +139,30 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["outbox", "reason"],
+        "required": [
+          "outbox",
+          "reason"
+        ],
         "properties": {
-          "outbox": {"type": "string", "format": "uri"},
-          "reason": {"type": "string", "minLength": 1}
+          "outbox": {
+            "type": "string",
+            "format": "uri"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
-    "residuals": {"type": "array", "items": {"type": "object"}},
-    "receipt": {"type": "object"}
+    "residuals": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "receipt": {
+      "type": "object"
+    }
   }
 }
