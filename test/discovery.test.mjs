@@ -213,3 +213,27 @@ test("paged sovereign seller feeds all 131 exact SEN offers without false ACK or
   assert.equal(withheldRecords.length, 1);
   assert.equal(withheldRecords[0].record.receipt, undefined);
 });
+
+test("invalid late semantic claim cannot turn a refused seller into partially admitted market supply", async () => {
+  const good = signedOffer(offer({ sku: ni("good-priced-offer") }));
+  const bad = signedOffer(offer({
+    sku: ni("later-incorrect-offer"),
+    sourceRightsVerification: "verified",
+  }));
+  const records = [];
+  const observer = {
+    observe: input => listAddressedSenOutbox({ ...input, fetcher: async () => Response.json({
+      type: "OrderedCollection", orderedItems: [good, bad],
+    }) }),
+    record: async entry => { records.push(entry); return { settlement: "not-a-commercial-receipt" }; },
+  };
+  const result = await discoverFederatedCapabilityOffers(request(), observer, { now: BASE });
+  assert.deepEqual(result.candidates, [],
+    "no earlier offer from a semantically rejected peer may survive as a candidate");
+  assert.equal(result.refusals.length, 1);
+  assert.match(result.refusals[0].reason, /source rights cannot acquire verified status/);
+  assert.deepEqual(result.denominator, [OUTBOX]);
+  assert.equal(records.length, 1);
+  assert.deepEqual(records[0].record.candidates, []);
+  assert.equal(records[0].record.receipt, undefined);
+});
