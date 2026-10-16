@@ -45,7 +45,6 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "kind",
           "offer",
           "cell",
           "sku",
@@ -57,10 +56,7 @@
           "agentCard",
           "authorization",
           "price",
-          "expiresAt",
-          "seller",
-          "book",
-          "sourceRightsVerification"
+          "expiresAt"
         ],
         "properties": {
           "offer": {
