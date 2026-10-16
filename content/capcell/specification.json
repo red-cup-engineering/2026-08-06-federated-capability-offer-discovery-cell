@@ -1,9 +1,9 @@
 {
   "name": "federated-capability-offer-discovery",
-  "description": "Discover canonical RMN capability offers from an exact finite denominator of public ActivityPub outboxes.",
+  "description": "Discover canonical SEN/CloudEvents/A2A x402 Offers from a finite set of peer ActivityPub++ actor outboxes, as research without payment/settlement authority.",
   "package": {
     "name": "@red-cup-engineering/federated-capability-offer-discovery-cell",
-    "version": "0.1.0",
+    "version": "0.3.2",
     "entrypoint": "./lib/discovery.mjs"
   },
   "operation": {
@@ -14,4 +14,3 @@
   },
   "rmnLaw": "content/contracts/discover-federated-capability-offers.rml"
 }
-
