@@ -87,6 +87,8 @@ test("current x402 SEN ActivityPub++ seller turns into a bounded discoverable ca
   assert.equal(result.candidates[0].price.network, "eip155:8453");
   assert.equal(result.candidates[0].price.amount, "70000");
   assert.equal(result.candidates[0].sourceRightsVerification, "unassayed");
+  assert.equal(result.candidates[0].sourceRightsClaim, null,
+    "absence of a license claim is unknown, not commercial clearance");
   assert.equal(result.residuals.length, 2);
   assert.equal(result.receipt.settlement, "study-receipt-no-purchase");
   assert.equal(records.length, 1);
@@ -141,4 +143,20 @@ test("endpoint errors preserve incomplete coverage, and duplicate outboxes are r
   await assert.rejects(() => discoverFederatedCapabilityOffers(request({
     endpoints: [request().endpoints[0], request().endpoints[0]],
   }), { observe: async () => [], record: async () => {} }), /duplicate outboxes/u);
+});
+
+test("source rights survive as publisher testimony but cannot become permission to resell", async () => {
+  const claims = {
+    basis: "stated-by-provider",
+    sourceUrl: "https://seller.example/data",
+    licenseUrl: "https://seller.example/license",
+    permissions: ["computed-output"],
+    evidenceNis: [ni("publisher-license-copy")],
+    observedAt: BASE,
+  };
+  const v = (await study(signedOffer(offer({ sourceRightsClaim: claims })))).result;
+  assert.equal(v.candidates.length, 1);
+  assert.deepEqual(v.candidates[0].sourceRightsClaim, claims);
+  assert.equal(v.candidates[0].sourceRightsVerification, "unassayed");
+  assert.equal(v.receipt.settlement, "study-receipt-no-purchase");
 });
