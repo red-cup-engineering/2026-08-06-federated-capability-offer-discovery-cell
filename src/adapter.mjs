@@ -9,7 +9,7 @@ function identifyDiscoveryRequest(value) {
   }
   return { id: identifyJsonSemanticContent({
     objectKind: value.kind, value, witnessRoot: EMPTY_WITNESS_ROOT,
-  }).ni };
+  }).id };
 }
 
 export function createCapabilityOfferDiscoveryRuntime({root}) {
