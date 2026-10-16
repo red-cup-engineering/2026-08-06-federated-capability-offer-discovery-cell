@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/federated-capability-offer-discovery-cell",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Discovers canonical SEN/CloudEvents/A2A x402 capability offers from explicit peer ActivityPub++ outboxes, preserving sovereign seller and settlement boundaries.",
   "type": "module",
   "private": true,
@@ -37,7 +37,7 @@
     "@a2a-js/sdk": "1.0.0-beta.0",
     "@red-cup-engineering/a2a-contracted-agent-service": "2.0.5",
     "@red-cup-engineering/a2a-sovereign-operation-boundary-service": "1.0.1",
-    "@red-cup-engineering/activitypub-services-section": "0.8.4",
+    "@red-cup-engineering/activitypub-services-section": "0.8.5",
     "@red-cup-engineering/resource-brokerage-service-section": "2.0.3",
     "@red-cup-engineering/witness-journal-rdf-projection-service": "1.1.0",
     "@red-cup-engineering/activitypub-server": "0.1.2",

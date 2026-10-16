@@ -77,3 +77,14 @@ The seller remains its own responsible enterprise. The site and the
 discovery cell have no power to pool other sovereign settlements' ledgers,
 redirect payment recipients, select a winner without consumer authority, or
 claim that contextual circulation value is already booked net revenue.
+
+## Bounded peer attention (ActivityPub Services 0.8.5)
+
+The source-owned SEN outbox reader now enforces a finite page, activity, per-response
+byte and total-byte budget on each externally supplied market denominator. It
+rejects cross-origin or repeated page/activity identities and incomplete outboxes.
+Exceeded bounds yield a **source-level refusal** with no accepted partial
+candidate list; the existing discovery record retains the exact refused
+outbox. The local 131-offer SEN producer → paginated reader → discovery
+consumer regression represents the complete useful traversal. This is no
+new registry, no funding authority and no ACK for an external buyer.

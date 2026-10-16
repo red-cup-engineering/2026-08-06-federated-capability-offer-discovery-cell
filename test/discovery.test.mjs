@@ -160,3 +160,56 @@ test("source rights survive as publisher testimony but cannot become permission 
   assert.equal(v.candidates[0].sourceRightsVerification, "unassayed");
   assert.equal(v.receipt.settlement, "study-receipt-no-purchase");
 });
+
+test("paged sovereign seller feeds all 131 exact SEN offers without false ACK or candidate truncation", async () => {
+  const activities = Array.from({ length: 131 }, (_, index) =>
+    signedOffer(offer({ sku: ni("independent-seller-offer-" + index) })));
+  const pages = [];
+  for (let index = 0; index < activities.length; index += 12) {
+    const number = pages.length + 1;
+    pages.push({
+      id: OUTBOX + "?page=" + number,
+      type: "OrderedCollectionPage",
+      partOf: OUTBOX,
+      orderedItems: activities.slice(index, index + 12),
+      ...(index + 12 < activities.length ? { next: OUTBOX + "?page=" + (number + 1) } : {}),
+    });
+  }
+  const responses = new Map([[OUTBOX, {
+    id: OUTBOX, type: "OrderedCollection", totalItems: activities.length,
+    first: pages[0].id,
+  }], ...pages.map(page => [page.id, page])]);
+  const read = async url => {
+    const value = responses.get(url);
+    return value ? Response.json(value) : new Response(null, { status: 404 });
+  };
+  const records = [];
+  const observer = {
+    observe: (input) => listAddressedSenOutbox({ ...input, fetcher: read }),
+    record: async entry => { records.push(entry); return { settlement: "study-only-no-purchase" }; },
+  };
+  const result = await discoverFederatedCapabilityOffers(request(), observer, { now: BASE });
+  assert.equal(result.candidates.length, 131,
+    "maximumCandidates is a legacy hint, not a truncated peer denominator");
+  assert.equal(new Set(result.candidates.map(row => row.activity)).size, 131);
+  assert.equal(new Set(result.candidates.map(row => row.sku)).size, 131);
+  assert.deepEqual(result.refusals, []);
+  assert.ok(result.candidates.every(row =>
+    row.seller.enterprise === "territory-a" && row.book.account === "Income:TerritoryA" &&
+    row.price.amount === "70000" && row.sourceRightsVerification === "unassayed"));
+  assert.equal(result.receipt.settlement, "study-only-no-purchase");
+  assert.equal(records.length, 1);
+  assert.equal(records[0].record.receipt, undefined);
+
+  const withheldRecords = [];
+  const constrained = await discoverFederatedCapabilityOffers(request(), {
+    observe: (input) => listAddressedSenOutbox({ ...input, fetcher: read, maxPages: 2 }),
+    record: async entry => { withheldRecords.push(entry); return { settlement: "study-only-no-purchase" }; },
+  }, { now: BASE });
+  assert.equal(constrained.candidates.length, 0,
+    "a remote source beyond budget is refused wholesale, not partially accepted");
+  assert.deepEqual(constrained.denominator, [OUTBOX]);
+  assert.match(constrained.refusals[0].reason, /bounded page budget/u);
+  assert.equal(withheldRecords.length, 1);
+  assert.equal(withheldRecords[0].record.receipt, undefined);
+});
