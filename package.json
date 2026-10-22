@@ -4,10 +4,10 @@
   "description": "Discovers canonical SEN/CloudEvents/A2A x402 capability offers from explicit peer ActivityPub++ outboxes, preserving sovereign seller and settlement boundaries.",
   "type": "module",
   "private": true,
-  "license": "Apache-2.0",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/red-cup-engineering/federated-capability-offer-discovery-cell.git"
+    "url": "git+https://github.com/red-cup-engineering/2026-08-06-federated-capability-offer-discovery-cell.git"
   },
   "files": [
     "scripts",
@@ -44,5 +44,9 @@
     "@red-cup-engineering/computer-code-engineering-services-section": "0.1.2",
     "@red-cup-engineering/computer-data-engineering-services-section": "0.2.3",
     "@red-cup-engineering/uri-services-section": "0.1.1"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
   }
 }
