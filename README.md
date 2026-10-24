@@ -15,7 +15,7 @@ ledger.
 ## Executable source chain
 
 1. A sovereign seller declares one exact priced operation in its original x402
-   offer catalogue. The shared `@red-cup-engineering/x402-engineering-services-section`
+   offer catalogue. The shared `@red-cup-engineering/x402-services-section`
    `./capability-outbox` producer compiles that source as
    `org.emsenn.capability-offer.v3` using the native SEN
    `application/sen+cbor` serialization.
@@ -23,7 +23,7 @@ ledger.
    `https://market.561.group/actors/market/outbox`. The published Offer
    contains **ActivityPub → CloudEvents → A2A → canonical SEN**;
    the offer is only a seller-authored claim, not a payment or sale.
-3. The existing `@red-cup-engineering/activitypub-engineering-services-section/sen-outbox-client`
+3. The existing `@red-cup-engineering/activitypub-services-section/sen-outbox-client`
    reads an **explicit endpoint denominator**, rejects unsigned-format or
    source-address mismatches and unpacks the semantic bytes. Public and
    correctly addressed peer activities are distinct from private ones.
